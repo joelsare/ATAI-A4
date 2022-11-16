@@ -1,4 +1,4 @@
-# example of training a gan on mnist
+#FROM: https://machinelearningmastery.com/how-to-develop-a-generative-adversarial-network-for-an-mnist-handwritten-digits-from-scratch-in-keras/
 from numpy import expand_dims
 from numpy import zeros
 from numpy import ones
@@ -12,20 +12,34 @@ from keras.layers import Dense
 from keras.layers import Reshape
 from keras.layers import Flatten
 from keras.layers import Conv2D
+from keras.layers import Input
 from keras.layers import Conv2DTranspose
 from keras.layers import LeakyReLU
+from keras.layers import ReLU
 from keras.layers import Dropout
+from keras.layers import BatchNormalization
+from keras.layers import UpSampling2D
 from matplotlib import pyplot
 
 # define the standalone discriminator model
 def define_discriminator(in_shape=(28,28,1)):
     model = Sequential()
-    model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same', input_shape=in_shape))
+    model.add(Conv2D(32, (5,5), strides=(2, 2), padding='same', input_shape=in_shape))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.4))
-    model.add(Conv2D(64, (3,3), strides=(2, 2), padding='same'))
+
+    model.add(Conv2D(64, (5,5), strides=(2, 2), padding='same'))
     model.add(LeakyReLU(alpha=0.2))
     model.add(Dropout(0.4))
+
+    model.add(Conv2D(128, (5,5), strides=(2, 2), padding='same'))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.4))
+
+    model.add(Conv2D(256, (5,5), strides=(2, 2), padding='same'))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Dropout(0.4))
+
     model.add(Flatten())
     model.add(Dense(1, activation='sigmoid'))
     # compile model
@@ -36,18 +50,27 @@ def define_discriminator(in_shape=(28,28,1)):
 # define the standalone generator model
 def define_generator(latent_dim):
     model = Sequential()
-    # foundation for 7x7 image
-    n_nodes = 192 * 7 * 7
-    model.add(Dense(n_nodes, input_dim=latent_dim))
-    model.add(LeakyReLU(alpha=0.2))
+    model.add(Input(shape=(latent_dim,)))
+    model.add(Dense(7*7*192))
+    model.add(BatchNormalization())
+    model.add(ReLU())
     model.add(Reshape((7, 7, 192)))
-    # upsample to 14x14
-    model.add(Conv2DTranspose(192, (4,4), strides=(2,2), padding='same'))
-    model.add(LeakyReLU(alpha=0.2))
-    # upsample to 28x28
-    model.add(Conv2DTranspose(192, (4,4), strides=(2,2), padding='same'))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Conv2D(1, (7,7), activation='sigmoid', padding='same'))
+    model.add(Dropout(0.4))
+
+    model.add(UpSampling2D(2))
+    model.add(Conv2D(96, (5,5), strides=1, padding='same'))
+    model.add(BatchNormalization())
+    model.add(ReLU())
+
+    model.add(UpSampling2D(2))
+    model.add(Conv2D(48, (5,5), strides=1, padding='same'))
+    model.add(BatchNormalization())
+    model.add(ReLU())
+
+    model.add(Conv2D(24, (5,5), strides=1, padding='same'))
+    model.add(BatchNormalization())
+    model.add(ReLU())
+    model.add(Conv2D(1, (5,5), activation='sigmoid', padding='same'))
     return model
 
 # define the combined generator and discriminator model, for updating the generator
@@ -179,6 +202,7 @@ latent_dim = 100
 d_model = define_discriminator()
 # create the generator
 g_model = define_generator(latent_dim)
+# g_model.summary()
 # create the gan
 gan_model = define_gan(g_model, d_model)
 # load image data
