@@ -191,10 +191,10 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
             print('>%d, %d/%d, d=%.3f, g=%.3f' % (i+1, j+1, bat_per_epo, d_loss, g_loss))
             dloss.append(d_loss)
         # evaluate the model performance, sometimes
-        if (iteration == 1 or iteration == 200 or iteration == 400 or iteration == 600 or iteration == 800 or iteration == 1000):
-            pyplot.plot(dloss)
-            pyplot.savefig("loss.png")
-            summarize_performance(i, g_model, d_model, dataset, latent_dim)
+            if (iteration == 1 or iteration == 200 or iteration == 400 or iteration == 600 or iteration == 800 or iteration == 1000):
+                pyplot.plot(dloss)
+                pyplot.savefig("loss.png")
+                summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 # size of the latent space
 latent_dim = 100
