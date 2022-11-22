@@ -164,6 +164,7 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 # train the generator and discriminator
 def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batch=256):
     dloss = []
+    gloss = []
     iteration = 0
     # bat_per_epo = int(dataset.shape[0] / n_batch)
     bat_per_epo = 10
@@ -190,9 +191,12 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=100, n_batc
             # summarize loss on this batch
             print('>%d, %d/%d, d=%.3f, g=%.3f' % (i+1, j+1, bat_per_epo, d_loss, g_loss))
             dloss.append(d_loss)
+            gloss.append(g_loss)
         # evaluate the model performance, sometimes
             if (iteration == 1 or iteration == 200 or iteration == 400 or iteration == 600 or iteration == 800 or iteration == 1000):
-                pyplot.plot(dloss)
+                pyplot.plot(dloss, label="discriminator")
+                pyplot.plot(gloss, label="GAN")
+                pyplot.legend(loc="best")
                 pyplot.savefig("loss.png")
                 summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
